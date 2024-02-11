@@ -48,7 +48,27 @@ class MediaAttachment(msgspec.Struct):
     text_url: Optional[str]
     meta: AttachmentMeta
     description: Optional[str]
-    blurhash: str
+    blurhash: Optional[str]
+
+
+class Card:
+    url: str
+    title: str
+    description: Optional[str]
+    language: str
+    type: str
+    author_name: str
+    author_url: str
+    provider_name: str
+    provider_url: str
+    html: str
+    width: int
+    height: int
+    image: Optional[str]
+    image_description: Optional[str]
+    embed_url: str
+    blurhash: Optional[str]
+    published_at: Optional[Any]
 
 
 class Field(msgspec.Struct):
@@ -110,7 +130,7 @@ class UpdatePayload(msgspec.Struct):
     mentions: list[Any]
     tags: list[Any]
     emojis: list[Any]
-    card: Any
+    card: Optional[Card]
     poll: Any
     favourited: bool
     reblogged: bool

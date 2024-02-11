@@ -172,13 +172,34 @@ async def main() -> None:
                         for blob, image_alt in image_blobs
                     ]
 
+                    embed = None
+
+                    if images:
+                        embed = atproto.models.AppBskyEmbedImages.Main(images=images)
+                    elif payload.card is not None:
+                        if payload.card.image is not None:
+                            async with session.get(attachment.url) as resp:
+                                if resp.status != 200:
+                                    continue
+
+                                img_data = await resp.read()
+                                resp = await bluesky.upload_blob(img_data)
+                                blob = resp.blob
+                        else:
+                            blob = None
+
+                        embed = atproto.models.AppBskyEmbedExternal.Main(
+                            external=atproto.models.AppBskyEmbedExternal.External(
+                                title=payload.card.title,
+                                description=payload.card.description or "",
+                                uri=payload.card.url,
+                                thumb=blob,
+                            )
+                        )
+
                     bluesky_post = await bluesky.send_post(
                         text=parsed_content,
-                        embed=(
-                            atproto.models.AppBskyEmbedImages.Main(images=images)
-                            if images
-                            else None
-                        ),
+                        embed=embed,
                         facets=[
                             atproto.models.AppBskyRichtextFacet.Main(
                                 features=[
