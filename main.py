@@ -178,7 +178,7 @@ async def main() -> None:
                         embed = atproto.models.AppBskyEmbedImages.Main(images=images)
                     elif payload.card is not None:
                         if payload.card.image is not None:
-                            async with session.get(attachment.url) as resp:
+                            async with session.get(payload.card.image) as resp:
                                 if resp.status != 200:
                                     continue
 
