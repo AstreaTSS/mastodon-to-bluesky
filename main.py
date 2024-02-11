@@ -25,14 +25,14 @@ import contextlib
 import logging
 import os
 import sys
-from html.parser import HTMLParser
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING
 
 import aiohttp
 import atproto
 import msgspec
 from dotenv import load_dotenv
 
+from content_parser import ContentParser
 from models import event_decoder, update_payload_decoder
 
 if TYPE_CHECKING:
@@ -45,55 +45,6 @@ log = logging.getLogger("mastodon-bluesky")
 
 log.setLevel(logging.INFO)
 log.addHandler(logging.StreamHandler(sys.stdout))
-
-
-class LinkData(NamedTuple):
-    start_index: int
-    end_index: int
-    url: str
-
-
-class ContentParser(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__()
-        self.data: list[str] = []
-        self.links: list[LinkData] = []
-        self.double_line: bool = False
-        self.character_index = 0
-
-    def handle_data(self, data: str) -> None:
-        if self.double_line:
-            self.data.append("\n\n")
-            self.character_index += 2
-        self.data.append(data)
-        self.character_index += len(data)
-        self.double_line = True
-
-    def handle_startendtag(self, tag: str, _: Any) -> None:
-        if tag == "br":
-            self.data.append("\n")
-            self.character_index += 1
-            self.double_line = False
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str]]) -> None:
-        if tag == "span":
-            self.double_line = False
-        elif tag == "a":
-            for attr in attrs:
-                if attr[0] == "href":
-                    self.links.append(
-                        LinkData(
-                            self.character_index,
-                            -1,
-                            attr[1],
-                        )
-                    )
-
-    def handle_endtag(self, tag: str) -> None:
-        if tag == "span":
-            self.double_line = True
-        elif tag == "a":
-            self.links[-1] = self.links[-1]._replace(end_index=self.character_index)
 
 
 async def main() -> None:
@@ -202,20 +153,7 @@ async def main() -> None:
                     bluesky_post = await bluesky.send_post(
                         text=parsed_content,
                         embed=embed,
-                        facets=[
-                            atproto.models.AppBskyRichtextFacet.Main(
-                                features=[
-                                    atproto.models.AppBskyRichtextFacet.Link(
-                                        uri=link_data.url
-                                    )
-                                ],
-                                index=atproto.models.AppBskyRichtextFacet.ByteSlice(
-                                    byteEnd=link_data.end_index,
-                                    byteStart=link_data.start_index,
-                                ),
-                            )
-                            for link_data in data_parser.links
-                        ],
+                        facets=data_parser.build_facets(),
                     )
 
                     log.info("Posted %s to Bluesky: %s", payload.url, bluesky_post.uri)
