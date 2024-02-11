@@ -51,7 +51,7 @@ class MediaAttachment(msgspec.Struct):
     blurhash: Optional[str]
 
 
-class Card:
+class PreviewCard:
     url: str
     title: str
     description: Optional[str]
@@ -98,39 +98,39 @@ class Account(msgspec.Struct):
     followers_count: int
     following_count: int
     statuses_count: int
-    last_status_at: date
+    last_status_at: Optional[date]
     hide_collections: bool
-    noindex: bool
+    noindex: Optional[bool]
     emojis: list[Any]
     roles: list[Any]
     fields: list[Field]
 
 
-class UpdatePayload(msgspec.Struct):
+class MastodonStatus(msgspec.Struct):
     id: str
     created_at: datetime
-    in_reply_to_id: Any
-    in_reply_to_account_id: Any
+    in_reply_to_id: Optional[str]
+    in_reply_to_account_id: Optional[str]
     sensitive: bool
     spoiler_text: str
     visibility: str
-    language: str
+    language: Optional[str]
     uri: str
-    url: str
+    url: Optional[str]
     replies_count: int
     reblogs_count: int
     favourites_count: int
-    edited_at: None
+    edited_at: Optional[str]
     local_only: bool
     content: str
-    reblog: Any
+    reblog: "Optional[MastodonStatus]"
     application: Any
     account: Account
     media_attachments: list[MediaAttachment]
     mentions: list[Any]
     tags: list[Any]
     emojis: list[Any]
-    card: Optional[Card]
+    card: Optional[PreviewCard]
     poll: Any
     favourited: bool
     reblogged: bool
@@ -139,6 +139,10 @@ class UpdatePayload(msgspec.Struct):
     pinned: bool
     filtered: list[Any]
 
+    @property
+    def pretty_url(self) -> str:
+        return self.url or self.uri
+
 
 class Event(msgspec.Struct):
     stream: list[str]
@@ -146,5 +150,5 @@ class Event(msgspec.Struct):
     payload: str
 
 
-update_payload_decoder = msgspec.json.Decoder(UpdatePayload)
+mastodon_status_decoder = msgspec.json.Decoder(MastodonStatus)
 event_decoder = msgspec.json.Decoder(Event)

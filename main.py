@@ -33,7 +33,7 @@ import msgspec
 from dotenv import load_dotenv
 
 from content_parser import ContentParser
-from models import event_decoder, update_payload_decoder
+from models import event_decoder, mastodon_status_decoder
 
 if TYPE_CHECKING:
     from atproto_client.models.blob_ref import BlobRef
@@ -78,16 +78,16 @@ async def main() -> None:
                     if data.event != "update":
                         continue
 
-                    payload = update_payload_decoder.decode(data.payload)
+                    payload = mastodon_status_decoder.decode(data.payload)
 
-                    log.info("Received post: %s", payload.url)
+                    log.info("Received post: %s", payload.uri)
 
                     if payload.in_reply_to_id is not None:
-                        log.info("Ignoring reply post: %s", payload.url)
+                        log.info("Ignoring reply post: %s", payload.pretty_url)
                         continue
 
                     if payload.reblog is not None:
-                        log.info("Ignoring reblog: %s", payload.url)
+                        log.info("Ignoring reblog: %s", payload.pretty_url)
                         continue
 
                     data_parser = ContentParser()
@@ -97,17 +97,20 @@ async def main() -> None:
                     parsed_content = "".join(data_parser.data).strip()
 
                     if len(parsed_content) > 300:
-                        log.info("Ignoring post with too much text: %s", payload.url)
+                        log.info(
+                            "Ignoring post with too much text: %s", payload.pretty_url
+                        )
                         continue
 
                     if parsed_content.startswith("[Mastodon]"):
                         log.info(
-                            "Ignoring post meant for Mastodon only: %s", payload.url
+                            "Ignoring post meant for Mastodon only: %s",
+                            payload.pretty_url,
                         )
                         continue
 
                     if payload.visibility != "public":
-                        log.info("Ignoring non-public post: %s", payload.url)
+                        log.info("Ignoring non-public post: %s", payload.pretty_url)
                         continue
 
                     image_blobs: list[tuple["BlobRef", str | None]] = []
@@ -160,7 +163,9 @@ async def main() -> None:
                         facets=data_parser.build_facets(),
                     )
 
-                    log.info("Posted %s to Bluesky: %s", payload.url, bluesky_post.uri)
+                    log.info(
+                        "Posted %s to Bluesky: %s", payload.pretty_url, bluesky_post.uri
+                    )
                 except Exception as e:
                     log.error("Error processing message", exc_info=e)
 
