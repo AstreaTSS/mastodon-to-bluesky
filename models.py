@@ -20,10 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import msgspec
+from datetime import date, datetime
+from typing import Any, Optional
 
-from datetime import datetime, date
-from typing import Optional, Any
+import msgspec
 
 
 class SizeProperties(msgspec.Struct):
