@@ -61,6 +61,14 @@ class ContentParser(HTMLParser):
             self.data.append("\n")
             self.double_line = False
 
+    def handle_starttag(self, tag: str, _):
+        if tag == "span":
+            self.double_line = False
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "span":
+            self.double_line = True
+
 
 async def main():
     bluesky = atproto.AsyncClient()
