@@ -131,7 +131,7 @@ class ContentParser(HTMLParser):
     def content(self) -> str:
         return "".join(self.data).strip()
 
-    def build_facets(self) -> list[atproto.models.AppBskyRichtextFacet.Main]:
+    def build_facets(self) -> list[atproto.models.AppBskyRichtextFacet.Main] | None:
         link_facets = [
             atproto.models.AppBskyRichtextFacet.Main(
                 features=[
@@ -158,7 +158,7 @@ class ContentParser(HTMLParser):
             )
             for hashtag_data in self.hashtags
         ]
-        return link_facets + hashtag_facets
+        return (link_facets + hashtag_facets) or None
 
 
 if __name__ == "__main__":
