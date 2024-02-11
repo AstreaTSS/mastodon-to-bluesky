@@ -76,8 +76,6 @@ class ContentParser(HTMLParser):
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str]]) -> None:
         if tag == "a":
-            href_attr = next((attr[1] for attr in attrs if attr[0] == "href"), None)
-
             if class_attr := next(
                 (attr[1] for attr in attrs if attr[0] == "class"), None
             ):
@@ -92,7 +90,9 @@ class ContentParser(HTMLParser):
                     )
                 elif "u-url mention" in class_attr:
                     self.link_mode = LinkMode.MENTION
-            elif href_attr:
+            elif href_attr := next(
+                (attr[1] for attr in attrs if attr[0] == "href"), None
+            ):
                 self.link_mode = LinkMode.URL
                 self.links.append(
                     LinkData(
