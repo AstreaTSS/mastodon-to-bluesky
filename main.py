@@ -84,7 +84,7 @@ class ContentParser(HTMLParser):
                     self.links.append(
                         LinkData(
                             self.character_index,
-                            self.character_index + len(attr[1]),
+                            -1,
                             attr[1],
                         )
                     )
@@ -92,6 +92,8 @@ class ContentParser(HTMLParser):
     def handle_endtag(self, tag: str) -> None:
         if tag == "span":
             self.double_line = True
+        elif tag == "a":
+            self.links[-1] = self.links[-1]._replace(end_index=self.character_index)
 
 
 async def main() -> None:
