@@ -21,7 +21,7 @@ repos:
         files: \.py$
         args:
           - --license-filepath
-          - license_header.txt
+          - LICENSE
           - --comment-style
           - "\"\"\"||\"\"\""
           - --allow-past-years
