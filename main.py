@@ -49,9 +49,13 @@ log.addHandler(logging.StreamHandler(sys.stdout))
 
 async def main() -> None:
     bluesky = atproto.AsyncClient()
-    await bluesky.login(os.environ["BLUESKY_USERNAME"], os.environ["BLUESKY_PASSWORD"])
+    profile = await bluesky.login(
+        os.environ["BLUESKY_USERNAME"], os.environ["BLUESKY_PASSWORD"]
+    )
 
-    log.info("Logged into Bluesky! Setting up Mastodon connection...")
+    log.info(
+        "Logged into Bluesky as %s! Setting up Mastodon connection...", profile.handle
+    )
 
     async with aiohttp.ClientSession() as session:
         async with session.ws_connect(
