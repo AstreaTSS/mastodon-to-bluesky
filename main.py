@@ -21,19 +21,22 @@ SOFTWARE.
 """
 
 import asyncio
-import msgspec
+import contextlib
 import logging
 import os
 import sys
 from html.parser import HTMLParser
+from typing import TYPE_CHECKING, Any, NamedTuple
 
-import atproto
-from atproto_client.models.blob_ref import BlobRef
 import aiohttp
-import contextlib
+import atproto
+import msgspec
 from dotenv import load_dotenv
 
 from models import event_decoder, update_payload_decoder
+
+if TYPE_CHECKING:
+    from atproto_client.models.blob_ref import BlobRef
 
 load_dotenv()
 
@@ -44,33 +47,54 @@ log.setLevel(logging.INFO)
 log.addHandler(logging.StreamHandler(sys.stdout))
 
 
+class LinkData(NamedTuple):
+    start_index: int
+    end_index: int
+    url: str
+
+
 class ContentParser(HTMLParser):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.data: list[str] = []
+        self.links: list[LinkData] = []
         self.double_line: bool = False
+        self.character_index = 0
 
-    def handle_data(self, data: str):
+    def handle_data(self, data: str) -> None:
         if self.double_line:
             self.data.append("\n\n")
+            self.character_index += 2
         self.data.append(data)
+        self.character_index += len(data)
         self.double_line = True
 
-    def handle_startendtag(self, tag: str, _):
+    def handle_startendtag(self, tag: str, _: Any) -> None:
         if tag == "br":
             self.data.append("\n")
+            self.character_index += 1
             self.double_line = False
 
-    def handle_starttag(self, tag: str, _):
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str]]) -> None:
         if tag == "span":
             self.double_line = False
+        elif tag == "a":
+            for attr in attrs:
+                if attr[0] == "href":
+                    self.links.append(
+                        LinkData(
+                            self.character_index,
+                            self.character_index + len(attr[1]),
+                            attr[1],
+                        )
+                    )
 
     def handle_endtag(self, tag: str) -> None:
         if tag == "span":
             self.double_line = True
 
 
-async def main():
+async def main() -> None:
     bluesky = atproto.AsyncClient()
     await bluesky.login(os.environ["BLUESKY_USERNAME"], os.environ["BLUESKY_PASSWORD"])
 
@@ -129,7 +153,7 @@ async def main():
                         log.info("Ignoring non-public post: %s", payload.url)
                         continue
 
-                    image_blobs: list[tuple[BlobRef, str | None]] = []
+                    image_blobs: list[tuple["BlobRef", str | None]] = []
 
                     for attachment in payload.media_attachments:
                         if attachment.type == "image":
@@ -155,6 +179,20 @@ async def main():
                             if images
                             else None
                         ),
+                        facets=[
+                            atproto.models.AppBskyRichtextFacet.Main(
+                                features=[
+                                    atproto.models.AppBskyRichtextFacet.Link(
+                                        uri=link_data.url
+                                    )
+                                ],
+                                index=atproto.models.AppBskyRichtextFacet.ByteSlice(
+                                    byteEnd=link_data.end_index,
+                                    byteStart=link_data.start_index,
+                                ),
+                            )
+                            for link_data in data_parser.links
+                        ],
                     )
 
                     log.info("Posted %s to Bluesky: %s", payload.url, bluesky_post.uri)
@@ -162,7 +200,7 @@ async def main():
                     log.error("Error processing message", exc_info=e)
 
 
-async def wrapped_main():
+async def wrapped_main() -> None:
     with contextlib.suppress(asyncio.CancelledError, KeyboardInterrupt):
         await main()
 
