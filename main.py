@@ -24,6 +24,7 @@ import asyncio
 import msgspec
 import logging
 import os
+import sys
 from html.parser import HTMLParser
 
 import atproto
@@ -40,7 +41,7 @@ decoder = msgspec.json.Decoder()
 log = logging.getLogger("mastodon-bluesky")
 
 log.setLevel(logging.INFO)
-log.addHandler(logging.StreamHandler())
+log.addHandler(logging.StreamHandler(sys.stdout))
 
 
 class ContentParser(HTMLParser):
