@@ -163,10 +163,11 @@ async def main() -> None:
                         facets=data_parser.build_facets(),
                     )
 
+                    weird_id_thing = bluesky_post.uri.split("/")[-1]
                     log.info(
                         "Posted %s to Bluesky: %s",
                         payload.pretty_url,
-                        f"https://bsky.app/profile/{profile.handle}/post/{bluesky_post.cid}",
+                        f"https://bsky.app/profile/{profile.handle}/post/{weird_id_thing}",
                     )
                 except Exception as e:
                     log.error("Error processing message", exc_info=e)
