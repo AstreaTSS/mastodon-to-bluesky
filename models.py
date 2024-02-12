@@ -123,7 +123,7 @@ class MastodonStatus(msgspec.Struct):
     edited_at: Optional[str]
     local_only: bool
     content: str
-    reblog: "Optional[MastodonStatus]"
+    reblog: Any
     application: Any
     account: Account
     media_attachments: list[MediaAttachment]
