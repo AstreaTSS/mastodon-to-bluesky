@@ -7,7 +7,7 @@ A simple script to post posts from Mastodon instances to Bluesky.
 Requires Python 3.10 or later, a Mastodon account, and a Bluesky account.
 
 1. On your Mastodon instance, create a list. Then, add yourself to the list - on the web interface, you can do this by clicking on "edit list" on your list, then typing your handle into the search box. Save the list's ID, which can be found at the end of the URL when you view the list on the web interface.
-    - You can use any list with any amount of people - the script should post all posts from the list to Bluesky. That being said, the script was designed with a single user in mind, so it may not work as expected with multiple users.
+    - You can use any list, technically - the bot will only post your account's posts though.
 2. Still on Mastodon, go into your account settings, then "Development", and create a new application with any name (you can keep the permissions and redirect URI as is). Save the access token.
     - You can narrow down the permissions to read only if you want to be more secure.
 3. On Bluesky, go to your account settings, go to "App Passwords", and create a new app password. Save the app password.

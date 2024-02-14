@@ -33,7 +33,7 @@ import msgspec
 from dotenv import load_dotenv
 
 from content_parser import ContentParser
-from models import event_decoder, mastodon_status_decoder
+from models import account_decoder, event_decoder, mastodon_status_decoder
 
 if TYPE_CHECKING:
     from atproto_client.models.blob_ref import BlobRef
@@ -48,16 +48,35 @@ log.addHandler(logging.StreamHandler(sys.stdout))
 
 
 async def main() -> None:
-    bluesky = atproto.AsyncClient()
-    profile = await bluesky.login(
-        os.environ["BLUESKY_USERNAME"], os.environ["BLUESKY_PASSWORD"]
-    )
-
-    log.info(
-        "Logged into Bluesky as %s! Setting up Mastodon connection...", profile.handle
-    )
-
     async with aiohttp.ClientSession() as session:
+        log.info("Verifying Mastodon credentials...")
+
+        async with session.get(
+            f"https://{os.environ['MASTODON_INSTANCE']}/api/v1/accounts/verify_credentials",
+            headers={"Authorization": f"Bearer {os.environ['MASTODON_ACCESS_TOKEN']}"},
+        ) as response:
+            response.raise_for_status()
+            try:
+                account = account_decoder.decode(await response.read())
+            except msgspec.DecodeError as e:
+                log.error("Error decoding account data", exc_info=e)
+                return
+
+        log.info(
+            "Verified Mastodon as %s! Setting up Bluesky connection...",
+            account.username,
+        )
+
+        bluesky = atproto.AsyncClient()
+        profile = await bluesky.login(
+            os.environ["BLUESKY_USERNAME"], os.environ["BLUESKY_PASSWORD"]
+        )
+
+        log.info(
+            "Logged into Bluesky as %s! Setting up Mastodon post streaming...",
+            profile.handle,
+        )
+
         async with session.ws_connect(
             f"wss://{os.environ['MASTODON_INSTANCE']}/api/v1/streaming",
             headers={"Authorization": f"Bearer {os.environ['MASTODON_ACCESS_TOKEN']}"},
@@ -81,6 +100,10 @@ async def main() -> None:
                     payload = mastodon_status_decoder.decode(data.payload)
 
                     log.info("Received post: %s", payload.uri)
+
+                    if payload.account.id != account.id:
+                        log.info("Ignoring post from another account: %s", payload.uri)
+                        continue
 
                     if payload.in_reply_to_id is not None:
                         log.info("Ignoring reply post: %s", payload.pretty_url)

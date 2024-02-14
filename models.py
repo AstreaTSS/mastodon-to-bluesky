@@ -151,4 +151,5 @@ class Event(msgspec.Struct):
 
 
 mastodon_status_decoder = msgspec.json.Decoder(MastodonStatus)
+account_decoder = msgspec.json.Decoder(Account)
 event_decoder = msgspec.json.Decoder(Event)
