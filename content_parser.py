@@ -144,21 +144,7 @@ class ContentParser(HTMLParser):
             )
             for link_data in self.links
         ]
-        hashtag_facets = [
-            atproto.models.AppBskyRichtextFacet.Main(
-                features=[
-                    atproto.models.AppBskyRichtextFacet.Tag(
-                        tag=hashtag_data.hashtag.strip()
-                    )
-                ],
-                index=atproto.models.AppBskyRichtextFacet.ByteSlice(
-                    byteEnd=hashtag_data.end_index,
-                    byteStart=hashtag_data.start_index,
-                ),
-            )
-            for hashtag_data in self.hashtags
-        ]
-        return (link_facets + hashtag_facets) or None
+        return link_facets or None
 
 
 if __name__ == "__main__":
