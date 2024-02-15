@@ -62,21 +62,22 @@ async def main() -> None:
                 log.error("Error decoding account data", exc_info=e)
                 return
 
-        log.info(
-            "Verified Mastodon as %s! Setting up Bluesky connection...",
-            account.username,
-        )
+    log.info(
+        "Verified Mastodon as %s! Setting up Bluesky connection...",
+        account.username,
+    )
 
-        bluesky = atproto.AsyncClient()
-        profile = await bluesky.login(
-            os.environ["BLUESKY_USERNAME"], os.environ["BLUESKY_PASSWORD"]
-        )
+    bluesky = atproto.AsyncClient()
+    profile = await bluesky.login(
+        os.environ["BLUESKY_USERNAME"], os.environ["BLUESKY_PASSWORD"]
+    )
 
-        log.info(
-            "Logged into Bluesky as %s! Setting up Mastodon post streaming...",
-            profile.handle,
-        )
+    log.info(
+        "Logged into Bluesky as %s! Setting up Mastodon post streaming...",
+        profile.handle,
+    )
 
+    async with aiohttp.ClientSession() as session:
         async with session.ws_connect(
             f"wss://{os.environ['MASTODON_INSTANCE']}/api/v1/streaming",
             headers={"Authorization": f"Bearer {os.environ['MASTODON_ACCESS_TOKEN']}"},
