@@ -82,12 +82,14 @@ async def main() -> None:
             f"wss://{os.environ['MASTODON_INSTANCE']}/api/v1/streaming",
             headers={"Authorization": f"Bearer {os.environ['MASTODON_ACCESS_TOKEN']}"},
         ) as ws:
-            await ws.send_json({
-                "type": "subscribe",
-                "stream": "list",
-                "list": os.environ["MASTODON_LIST_ID"],
-                "access_token": os.environ["MASTODON_ACCESS_TOKEN"],
-            })
+            await ws.send_json(
+                {
+                    "type": "subscribe",
+                    "stream": "list",
+                    "list": os.environ["MASTODON_LIST_ID"],
+                    "access_token": os.environ["MASTODON_ACCESS_TOKEN"],
+                }
+            )
 
             log.info("Connected to Mastodon! Listening for updates...")
 
