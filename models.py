@@ -1,5 +1,5 @@
 """
-Copyright (c) 2024 AstreaTSS
+Copyright (c) 2024-2026 AstreaTSS
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@ SOFTWARE.
 """
 
 from datetime import date, datetime
-from typing import Any, Optional
+from typing import Any
 
 import msgspec
 
@@ -43,18 +43,18 @@ class MediaAttachment(msgspec.Struct):
     type: str
     url: str
     preview_url: str
-    remote_url: Optional[str]
-    preview_remote_url: Optional[str]
-    text_url: Optional[str]
+    remote_url: str | None
+    preview_remote_url: str | None
+    text_url: str | None
     meta: AttachmentMeta
-    description: Optional[str]
-    blurhash: Optional[str]
+    description: str | None
+    blurhash: str | None
 
 
 class PreviewCard:
     url: str
     title: str
-    description: Optional[str]
+    description: str | None
     language: str
     type: str
     author_name: str
@@ -64,17 +64,17 @@ class PreviewCard:
     html: str
     width: int
     height: int
-    image: Optional[str]
-    image_description: Optional[str]
+    image: str | None
+    image_description: str | None
     embed_url: str
-    blurhash: Optional[str]
-    published_at: Optional[Any]
+    blurhash: str | None
+    published_at: Any | None
 
 
 class Field(msgspec.Struct):
     name: str
     value: str
-    verified_at: Optional[datetime]
+    verified_at: datetime | None
 
 
 class Account(msgspec.Struct):
@@ -98,9 +98,9 @@ class Account(msgspec.Struct):
     followers_count: int
     following_count: int
     statuses_count: int
-    last_status_at: Optional[date]
+    last_status_at: date | None
     hide_collections: bool
-    noindex: Optional[bool]
+    noindex: bool | None
     emojis: list[Any]
     roles: list[Any]
     fields: list[Field]
@@ -109,18 +109,18 @@ class Account(msgspec.Struct):
 class MastodonStatus(msgspec.Struct):
     id: str
     created_at: datetime
-    in_reply_to_id: Optional[str]
-    in_reply_to_account_id: Optional[str]
+    in_reply_to_id: str | None
+    in_reply_to_account_id: str | None
     sensitive: bool
     spoiler_text: str
     visibility: str
-    language: Optional[str]
+    language: str | None
     uri: str
-    url: Optional[str]
+    url: str | None
     replies_count: int
     reblogs_count: int
     favourites_count: int
-    edited_at: Optional[str]
+    edited_at: str | None
     local_only: bool
     content: str
     reblog: Any
@@ -130,7 +130,7 @@ class MastodonStatus(msgspec.Struct):
     mentions: list[Any]
     tags: list[Any]
     emojis: list[Any]
-    card: Optional[PreviewCard]
+    card: PreviewCard | None
     poll: Any
     favourited: bool
     reblogged: bool
