@@ -1,5 +1,5 @@
 """
-Copyright (c) 2024 AstreaTSS
+Copyright (c) 2024-2026 AstreaTSS
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -139,7 +139,7 @@ async def main() -> None:
                         log.info("Ignoring non-public post: %s", payload.pretty_url)
                         continue
 
-                    image_blobs: list[tuple["BlobRef", str | None]] = []
+                    image_blobs: list[tuple[BlobRef, str | None]] = []
 
                     for attachment in payload.media_attachments:
                         if attachment.type == "image":
